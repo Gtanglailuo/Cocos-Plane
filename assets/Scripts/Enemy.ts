@@ -42,14 +42,7 @@ export class Enemy extends Component {
         {
             this.anim.play(this.anim_Down);
         }
-
-        this.scheduleOnce(() => {
-            if (otherCollider.node && otherCollider.node.isValid) {
-                otherCollider.node.destroy();
-            }
-        }, 0);
     
-
         if(this.hp<=0)
         {
             if(this.collider)
