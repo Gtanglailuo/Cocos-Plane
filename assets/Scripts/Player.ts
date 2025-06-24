@@ -6,7 +6,7 @@ const { ccclass, property } = _decorator;
 enum ShootType
 {
     OneShoot,TwoShoot
-};
+,none};
 
 @ccclass('Player')
 export class Player extends Component {
@@ -107,6 +107,8 @@ export class Player extends Component {
 
     protected update(dt: number): void {
 
+        
+
         switch(this.shootType){
             case ShootType.OneShoot:
                 this.oneShootFunc(dt);
@@ -177,6 +179,7 @@ export class Player extends Component {
         {
             if(this.collider)
             {
+                this.shootType = ShootType.none;
                 this.collider.enabled=false;
             }
 
