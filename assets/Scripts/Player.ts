@@ -1,5 +1,7 @@
-import { __private, _decorator, Animation, Collider2D, Component, Contact2DType, EventTouch, Input, input,instantiate,Node, Prefab, Vec3 } from 'cc';
+import { __private, _decorator, Animation, Collider2D, Component, Contact2DType, director, EventTouch, find, Input, input,instantiate,Node, Prefab, Vec3 } from 'cc';
 import { Bullet } from './Bullet';
+import { Reward, RewardType } from './Reward';
+import { GameManager } from './GameManager';
 
 const { ccclass, property } = _decorator;
 
@@ -21,9 +23,13 @@ export class Player extends Component {
     pos1:Node = null;
     
     shootTimer:number =0;
+    TwoShootTimer:number =0;
+
     @property
     shootType:ShootType = ShootType.OneShoot;
 
+    @property
+    TwoShootKeepingTime:number = 5;
 
     @property(Prefab)
     bullet2Prefab:Prefab = null;
@@ -36,7 +42,7 @@ export class Player extends Component {
     collider:Collider2D = null;
 
     @property
-    lifeCount:number =1;
+    lifeCount:number =3;
     @property(Animation)
     anim:Animation = null;
     @property
@@ -53,16 +59,15 @@ export class Player extends Component {
     //无敌时间计时器
     invincibleTimer:number = 0;
 
-
+    private uiNode: Node = null!;
     
     protected onLoad():void{
         input.on(Input.EventType.TOUCH_MOVE,this.onTouchMove,this);
-
+        this.uiNode = find("Canvas-UI/HP");
         this.collider = this.getComponent(Collider2D);
         if (this.collider) {
             this.collider.on(Contact2DType.BEGIN_CONTACT, this.onBeginContact, this);
         }
-
     }
     protected onDestroy():void{
         input.off(Input.EventType.TOUCH_MOVE,this.onTouchMove,this);
@@ -71,8 +76,19 @@ export class Player extends Component {
             this.collider.off(Contact2DType.BEGIN_CONTACT, this.onBeginContact, this);
         }
     }
+    start() {
+        //开局触发监听事件
 
+        this.uiNode.emit("ChangeHPUI",this.lifeCount);
+
+    }
     onTouchMove(event:EventTouch) {
+
+        if(director.isPaused())
+        {
+            return;
+        }
+
         if(this.lifeCount<1)
         {
             return;
@@ -104,7 +120,6 @@ export class Player extends Component {
 
 
     }
-
     protected update(dt: number): void {
 
         
@@ -144,8 +159,17 @@ export class Player extends Component {
         }
     }
     twoShootFunc(dt:number){
+        //切换成双发模式是有一个持续时间的的
+        this.TwoShootTimer+=dt;
+        if(this.TwoShootTimer>this.TwoShootKeepingTime)
+        {
+            this.ChangeShootTypeToOne();
+        }
+
+
+
         this.shootTimer+=dt;
-        if(this.shootTimer>=this.shootRate)
+        if(this.shootTimer>this.shootRate)
         {
             this.shootTimer = 0;
             const bullet = instantiate(this.bullet2Prefab);
@@ -160,31 +184,85 @@ export class Player extends Component {
     }
     onBeginContact(selfCollider: Collider2D, otherCollider: Collider2D) {
         
-        if(this.isInvincible)
+        const myReward = otherCollider.getComponent(Reward);
+        if(myReward)
         {
-            return;
+            this.onContactToReward(myReward);
         }
-        this.isInvincible = true;
-        this.lifeCount-=1;
-        if(this.lifeCount>0)
-        {
-            this.anim.play(this.anim_Hit);
-        }
-        else
-        {
-            this.anim.play(this.anim_Down);
+        else{
+            this.onContactToEnemy();
         }
 
-        if(this.lifeCount<=0)
+
+        
+    }
+    onContactToReward(myReward:Reward){
+        switch(myReward.rewardType)
         {
-            if(this.collider)
+            case RewardType.None:
+                break;
+            case RewardType.One:
+                GameManager.getInstance().AddBomb();
+                break;
+                //修改成双发模式
+            case RewardType.Two:
+                this.ChangeShootTypeToTwo();
+                break;
+        }
+        this.scheduleOnce(()=>{
+            if(myReward?.node?.isValid)
             {
-                this.shootType = ShootType.none;
-                this.collider.enabled=false;
+                myReward.node.destroy();
+            }
+        },0.1);
+
+
+    }
+    onContactToEnemy(){
+        if(this.isInvincible)
+            {
+                return;
+            }
+            this.isInvincible = true;
+
+            this.lifeCount-=1;
+            this.uiNode.emit("ChangeHPUI",this.lifeCount);
+            if(this.lifeCount>0)
+            {
+                this.anim.play(this.anim_Hit);
+            }
+            else
+            {
+                this.anim.play(this.anim_Down);
+            }
+    
+            if(this.lifeCount<=0)
+            {
+                if(this.collider)
+                {
+                    this.shootType = ShootType.none;
+                    this.collider.enabled=false;
+                }
+
+                this.scheduleOnce(()=>{
+                    GameManager.getInstance().GameOver();
+                },0.4);
+    
             }
 
-        }
+
     }
+    ChangeShootTypeToTwo()
+    {
+        this.shootType = ShootType.TwoShoot;
+        this.TwoShootTimer = 0;
+    }
+    ChangeShootTypeToOne()
+    {
+        this.shootType = ShootType.OneShoot;
+    }
+    
+
 
 
 }

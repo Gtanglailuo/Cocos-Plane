@@ -1,4 +1,5 @@
 import { _decorator, Animation, Collider2D, Component, Contact2DType, Node } from 'cc';
+import { GameManager } from './GameManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('Enemy')
@@ -20,6 +21,9 @@ export class Enemy extends Component {
     anim_Down:string = "";
 
     private isContacting: boolean = false;
+    @property
+    score:number = 1;
+
 
     start() {
         
@@ -45,6 +49,7 @@ export class Enemy extends Component {
     
         if(this.hp<=0)
         {
+            GameManager.getInstance().AddScore(this.score);
             if(this.collider)
             {
                 this.collider.enabled=false;

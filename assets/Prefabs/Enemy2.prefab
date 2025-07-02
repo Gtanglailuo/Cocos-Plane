@@ -57,7 +57,7 @@
       "z": 1
     },
     "_mobility": 0,
-    "_layer": 33554432,
+    "_layer": 1,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -110,7 +110,7 @@
       "z": 1
     },
     "_mobility": 0,
-    "_layer": 33554432,
+    "_layer": 1,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -258,6 +258,7 @@
     "collider": null,
     "anim_Hit": "Enemy2_hit",
     "anim_Down": "Enemy2_down",
+    "score": 3,
     "_id": ""
   },
   {

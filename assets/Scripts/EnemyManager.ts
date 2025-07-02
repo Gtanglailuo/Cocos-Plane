@@ -23,11 +23,22 @@ export class EnemyManager extends Component {
     enemy2Prefab:Prefab=null;
 
 
+    //奖励物品生成
+    @property
+    rewardRate:number = 1;
+    @property(Prefab)
+    reward1Prefab:Prefab=null;
+    @property(Prefab)
+    reward2Prefab:Prefab=null;
+
+
     start() {
         this.schedule(this.enemy0Spwan,this.enemy0SpawnRate);
         this.schedule(this.enemy1Spwan,this.enemy1SpawnRate);
         this.schedule(this.enemy2Spwan,this.enemy2SpawnRate);
+        this.schedule(this.rewardSpwan,this.rewardRate);
     }
+
 
     update(deltaTime: number) {
         
@@ -37,6 +48,7 @@ export class EnemyManager extends Component {
         this.unschedule(this.enemy0Spwan);
         this.unschedule(this.enemy1Spwan);
         this.unschedule(this.enemy2Spwan);
+        this.unschedule(this.rewardSpwan);
     }
 
     enemy0Spwan()
@@ -54,6 +66,25 @@ export class EnemyManager extends Component {
     enemy2Spwan()
     {
         this.enemySpawn(this.enemy2Prefab,-200,200,500);
+
+
+    }
+
+    rewardSpwan() {
+        const randomNum = math.randomRangeInt(0,3);
+        let p = null;
+        if(randomNum == 1)
+        {
+            p = this.reward1Prefab;
+        }
+        else if(randomNum == 2)
+        {
+            p = this.reward2Prefab;
+        }
+        if(p)
+        {
+            this.enemySpawn(p,-207,207,474);
+        }
 
 
     }

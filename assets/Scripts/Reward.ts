@@ -1,7 +1,7 @@
 import { _decorator, Component, Enum, Node } from 'cc';
 const { ccclass, property } = _decorator;
 
-enum RewardType{
+export enum RewardType{
     None,One,Two
 
 }
